@@ -1,6 +1,10 @@
+import os
+
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
+from AMO_2 import settings
 from .macmenu_parse_config import options_configuration
 from selenium import webdriver
 import json
@@ -38,6 +42,10 @@ class MacMenu(metaclass=SingletonMeta):
             "div.cmp-product-details-main__description").get_attribute("textContent") \
             .replace("\n", "").replace("\t", "")
 
+        self._wait.until(EC.text_to_be_present_in_element_attribute(
+            (By.CSS_SELECTOR, "div.cq-dd-image img"), "src", "https"))
+        img_url = self._browser.find_element(By.CSS_SELECTOR, "div.cq-dd-image img").get_attribute("src")
+
         # open accordion element
         energy_value_accordion = self._browser.find_element(
             By.XPATH,
@@ -64,8 +72,8 @@ class MacMenu(metaclass=SingletonMeta):
         self._browser.switch_to.window(self._browser.window_handles[0])
 
         product = {
-            'name': name, 'description': description, 'calories': calories, 'fats': fats, 'carbs': carbs,
-            'proteins': proteins, 'unsaturated fats': unsaturated_fats, 'sugar': sugar, 'salt': salt,
+            'name': name, 'description': description, 'img_url': img_url, 'calories': calories, 'fats': fats,
+            'carbs': carbs, 'proteins': proteins, 'unsaturated fats': unsaturated_fats, 'sugar': sugar, 'salt': salt,
             'portion': portion}
         return product
 
@@ -79,7 +87,7 @@ class MacMenu(metaclass=SingletonMeta):
             for product in products:
                 product_dict = self._collect_product_info(product.get_attribute("href"))
                 menu_dict["products"].append(product_dict)
-            with open("..\\..\\..\\mac_menu.json", "w") as menu_f:
+            with open(os.path.join(settings.BASE_DIR, 'mac_menu.json'), "w") as menu_f:
                 json.dump(menu_dict, menu_f, indent=4)
             return True
         except Exception as e:
