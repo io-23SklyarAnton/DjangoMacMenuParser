@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'bootstrap4',
+    'collect_macmenu.apps.CollectMacInfoConfig',
+    'display_macmenu.apps.DisplayMacmenuConfig',
 ]
 
 MIDDLEWARE = [
