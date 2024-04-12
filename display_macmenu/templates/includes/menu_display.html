@@ -1,0 +1,23 @@
+<div class="container-fluid">
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <img src="{{ product.img_url }}" class="card-img-top" alt="product image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.description }}</p>
+                    <a href="{% url 'display_macmenu:product' product.name %}" class="btn btn-primary">More info</a>
+                </div>
+            </div>
+        </div>
+        {% if forloop.counter|divisibleby:3 and not forloop.last %}
+    </div>
+    <div class="row">
+        {% endif %}
+        {% empty %}
+        <p>No products yet, try to collect menu here:</p>
+        <a href="{% url 'collect_macmenu:collect_menu' %}" class="btn btn-primary">collect menu</a>
+        {% endfor %}
+    </div>
+</div>

@@ -1,0 +1,22 @@
+{% extends 'basic.html' %}
+{% load static %}
+<link href="{% static "css/mac_menu_css.css" %}" rel="stylesheet">
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="product">
+                    {% if product %}
+                        {% include 'includes/product_display.html' %}
+                    {% else %}
+                        <p>No Info about the product :\</p>
+                        <a href="{% url 'collect_macmenu:collect_menu' %}" class="btn">Try to collect menu info</a>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

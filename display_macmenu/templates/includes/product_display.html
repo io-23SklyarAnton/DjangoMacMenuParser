@@ -1,0 +1,24 @@
+<a href="{% url 'display_macmenu:product_field' product.name 'name' %}"
+      class="btn"><h2>{{ product.name }}</h2></a>
+<a href="{% url 'display_macmenu:product_field' product.name 'img_url' %}">
+    <img src="{{ product.img_url }}" alt="{{ product.name }} Image"></a>
+
+<p><a href="{% url 'display_macmenu:product_field' product.name 'description' %}"
+      class="btn">Description:</a> {{ product.description }}
+</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'calories' %}"
+      class="btn">Calories:</a> {{ product.calories }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'fats' %}"
+      class="btn">Fats:</a> {{ product.fats }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'carbs' %}"
+      class="btn">Carbs:</a> {{ product.carbs }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'proteins' %}"
+      class="btn">Proteins:</a> {{ product.proteins }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'unsaturated_fats' %}" class="btn">Unsaturated
+    Fats:</a> {{ product.unsaturated_fats }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'sugar' %}"
+      class="btn">Sugar:</a> {{ product.sugar }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'salt' %}"
+      class="btn">Salt:</a> {{ product.salt }}</p>
+<p><a href="{% url 'display_macmenu:product_field' product.name 'portion' %}"
+      class="btn">Portion:</a> {{ product.portion }}</p>

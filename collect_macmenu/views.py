@@ -4,10 +4,10 @@ from .services.selenium_service.macmenu_parse import MacMenu
 
 
 def home(request):
-    return HttpResponse("Home")
+    return render(request, 'home_page.html')
 
 
 def collect_menu(request):
     menu = MacMenu()
-    menu.save_mac_menu_as_json()
-    return render(request, 'collect_menu.html')
+    success = menu.save_mac_menu_as_json()
+    return render(request, 'collect_menu.html', {'success': success})

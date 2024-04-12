@@ -1,0 +1,14 @@
+{% extends 'basic.html' %}
+{% block title %}Home{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-6">
+                <a href="{% url 'collect_macmenu:collect_menu' %}" class="btn-lg center">collect MC Donald's menu</a>
+            </div>
+            <div class="col-6">
+                <a href="{% url 'display_macmenu:all_products' %}" class="btn-lg center">Show MC Donald's menu</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

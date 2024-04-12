@@ -1,10 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends 'basic.html' %}
+{% block title %}{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                {% if success %}
+                    Menu successfully parsed !!!
+                {% else %}
+                    Something went wrong :(
+                    <a href="{% url 'collect_macmenu:collect_menu' %}">Retry</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
