@@ -1,0 +1,24 @@
+services:
+  chrome:
+    image: kasmweb/chrome
+    container_name: chrome
+
+  django:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: mac_menu_django
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    command:
+      - bash
+      - -c
+      - "dos2unix ./manage.py collectstatic --noinput && dos2unix ./manage.py migrate && dos2unix ./manage.py runserver"
+    depends_on:
+     - chrome
+volumes:
+  static_volume:
+  media_volume:
+
+
