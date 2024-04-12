@@ -1,12 +1,13 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
-from macmenu_parse_config import options_configuration
+from .macmenu_parse_config import options_configuration
 from selenium import webdriver
 import json
 
 
 class SingletonMeta(type):
+    """provides singleton behavior"""
     __instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -68,13 +69,22 @@ class MacMenu(metaclass=SingletonMeta):
             'portion': portion}
         return product
 
-    def save_mac_menu_as_json(self):
-        """parses mcdonalds and dumps products data in .json file"""
-        menu_dict = {"products": []}
-        self._browser.get("https://www.mcdonalds.com/ua/uk-ua/eat/fullmenu.html")
-        products = self._browser.find_elements(By.CSS_SELECTOR, "a.cmp-category__item-link")
-        for product in products:
-            product_dict = self._collect_product_info(product.get_attribute("href"))
-            menu_dict["products"].append(product_dict)
-        with open("..\\..\\..\\mac_menu.json", "w") as menu_f:
-            json.dump(menu_dict, menu_f, indent=4)
+    def save_mac_menu_as_json(self) -> bool:
+        """parses mcdonalds and dumps products data in .json file
+        returns True if succeed"""
+        try:
+            menu_dict = {"products": []}
+            self._browser.get("https://www.mcdonalds.com/ua/uk-ua/eat/fullmenu.html")
+            products = self._browser.find_elements(By.CSS_SELECTOR, "a.cmp-category__item-link")
+            for product in products:
+                product_dict = self._collect_product_info(product.get_attribute("href"))
+                menu_dict["products"].append(product_dict)
+            with open("..\\..\\..\\mac_menu.json", "w") as menu_f:
+                json.dump(menu_dict, menu_f, indent=4)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+        finally:
+            self._browser.close()
+            self._browser.quit()
