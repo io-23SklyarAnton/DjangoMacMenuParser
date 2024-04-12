@@ -1,6 +1,6 @@
 services:
   chrome:
-    image: kasmweb/chrome
+    image: selenium/standalone-chrome
     container_name: chrome
 
   django:
@@ -8,13 +8,15 @@ services:
       dockerfile: Dockerfile
       context: .
     container_name: mac_menu_django
+    ports:
+      - "8001:8001"
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
     command:
       - bash
       - -c
-      - "dos2unix ./manage.py collectstatic --noinput && dos2unix ./manage.py migrate && dos2unix ./manage.py runserver"
+      - "./manage.py collectstatic --noinput && ./manage.py migrate && ./manage.py runserver '0.0.0.0:8001'"
     depends_on:
      - chrome
 volumes:

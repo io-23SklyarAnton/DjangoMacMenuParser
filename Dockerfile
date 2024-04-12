@@ -30,8 +30,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Create static and media directories
 RUN mkdir -p /app/static /app/media
 
-# Switch to the non-privileged user to run the application
-USER appuser
 
 # Copy the source code into the container
 COPY . .
@@ -40,4 +38,4 @@ COPY . .
 EXPOSE 8001
 
 # Run the application
-CMD ["python", "manage.py", "runserver"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]
