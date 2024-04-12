@@ -1,8 +1,7 @@
-from selenium.common import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
-from .macmenu_parse_config import options_configuration
+from macmenu_parse_config import options_configuration
 from selenium import webdriver
 import json
 
@@ -47,23 +46,18 @@ class MacMenu(metaclass=SingletonMeta):
         energy_value_accordion.click()
         self._wait.until(lambda d: energy_value_accordion.get_attribute("aria-expanded") == 'true')
 
-        primary_nutritions = self._browser.find_elements(
-            By.XPATH,
-            "//li[@class='cmp-nutrition-summary__heading-primary-item']/span[1]/span[2]"
-        )
-        calories = primary_nutritions[0].text
-        fats = primary_nutritions[1].text
-        carbs = primary_nutritions[2].text
-        proteins = primary_nutritions[3].text
+        primary_nutrition_pattern = "//ul[@class='cmp-nutrition-summary__heading-primary']/li[{}]/span[1]/span[2]"
+        calories = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(1)).text
+        fats = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(2)).text
+        carbs = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(3)).text
+        proteins = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(4)).text
 
-        secondary_nutritions = self._browser.find_elements(
-            By.XPATH,
-            "//div[@class='cmp-nutrition-summary__details-column-view-desktop']/ul/li/span[2]/span[1]")
+        secondary_nutrition_pattern = "//div[@class='cmp-nutrition-summary__details-column-view-desktop']/ul/li[{}]/span[2]/span[1]"
 
-        unsaturated_fats = secondary_nutritions[0].text
-        sugar = secondary_nutritions[1].text
-        salt = secondary_nutritions[2].text
-        portion = secondary_nutritions[3].text
+        unsaturated_fats = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(1)).text
+        sugar = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(2)).text
+        salt = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(3)).text
+        portion = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(4)).text
 
         self._browser.close()
         self._browser.switch_to.window(self._browser.window_handles[0])

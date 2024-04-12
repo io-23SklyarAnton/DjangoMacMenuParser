@@ -14,5 +14,6 @@ def options_configuration() -> webdriver.IeOptions:
     _add_user_agent(options)
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--headless")
-
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920x1080")
     return options
