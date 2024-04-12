@@ -1,5 +1,6 @@
 import os
 
+from selenium.common import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -42,10 +43,12 @@ class MacMenu(metaclass=SingletonMeta):
             "div.cmp-product-details-main__description").get_attribute("textContent") \
             .replace("\n", "").replace("\t", "")
 
-        self._wait.until(EC.text_to_be_present_in_element_attribute(
-            (By.CSS_SELECTOR, "div.cq-dd-image img"), "src", "https"))
-        img_url = self._browser.find_element(By.CSS_SELECTOR, "div.cq-dd-image img").get_attribute("src")
-
+        try:
+            self._wait.until(EC.text_to_be_present_in_element_attribute(
+                (By.CSS_SELECTOR, "div.cq-dd-image img"), "src", "https"))
+            img_url = self._browser.find_element(By.CSS_SELECTOR, "div.cq-dd-image img").get_attribute("src")
+        except TimeoutException:
+            img_url = "https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg"
         # open accordion element
         energy_value_accordion = self._browser.find_element(
             By.XPATH,
@@ -73,7 +76,7 @@ class MacMenu(metaclass=SingletonMeta):
 
         product = {
             'name': name, 'description': description, 'img_url': img_url, 'calories': calories, 'fats': fats,
-            'carbs': carbs, 'proteins': proteins, 'unsaturated fats': unsaturated_fats, 'sugar': sugar, 'salt': salt,
+            'carbs': carbs, 'proteins': proteins, 'unsaturated_fats': unsaturated_fats, 'sugar': sugar, 'salt': salt,
             'portion': portion}
         return product
 
@@ -85,8 +88,12 @@ class MacMenu(metaclass=SingletonMeta):
             self._browser.get("https://www.mcdonalds.com/ua/uk-ua/eat/fullmenu.html")
             products = self._browser.find_elements(By.CSS_SELECTOR, "a.cmp-category__item-link")
             for product in products:
-                product_dict = self._collect_product_info(product.get_attribute("href"))
+                try:
+                    product_dict = self._collect_product_info(product.get_attribute("href"))
+                except StaleElementReferenceException:
+                    product_dict = self._collect_product_info(product.get_attribute("href"))
                 menu_dict["products"].append(product_dict)
+                print(product_dict)
             with open(os.path.join(settings.BASE_DIR, 'mac_menu.json'), "w") as menu_f:
                 json.dump(menu_dict, menu_f, indent=4)
             return True
