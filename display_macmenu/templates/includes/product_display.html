@@ -1,7 +1,7 @@
 <a href="{% url 'display_macmenu:product_field' product.name 'name' %}"
       class="btn"><h2>{{ product.name }}</h2></a>
-<a href="{% url 'display_macmenu:product_field' product.name 'img_url' %}">
-    <img src="{{ product.img_url }}" alt="{{ product.name }} Image"></a>
+<a href="{% url 'display_macmenu:product_field' product.name 'image_url' %}">
+    <img src="{{ product.image_url }}" alt="{{ product.name }} Image"></a>
 
 <p><a href="{% url 'display_macmenu:product_field' product.name 'description' %}"
       class="btn">Description:</a> {{ product.description }}
@@ -11,7 +11,7 @@
 <p><a href="{% url 'display_macmenu:product_field' product.name 'fats' %}"
       class="btn">Fats:</a> {{ product.fats }}</p>
 <p><a href="{% url 'display_macmenu:product_field' product.name 'carbs' %}"
-      class="btn">Carbs:</a> {{ product.carbs }}</p>
+      class="btn">Carbs:</a> {{ product.carbohydrates }}</p>
 <p><a href="{% url 'display_macmenu:product_field' product.name 'proteins' %}"
       class="btn">Proteins:</a> {{ product.proteins }}</p>
 <p><a href="{% url 'display_macmenu:product_field' product.name 'unsaturated_fats' %}" class="btn">Unsaturated

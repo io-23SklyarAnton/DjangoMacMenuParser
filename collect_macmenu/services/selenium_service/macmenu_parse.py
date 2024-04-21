@@ -1,14 +1,20 @@
-import os
+import os.path
+import time
+from urllib.parse import urljoin
 
-from selenium.common import TimeoutException, StaleElementReferenceException
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
+from selenium import webdriver
+
+import json
+from multiprocessing.dummy import Pool as ThreadPool
+import requests
+from bs4 import BeautifulSoup
 
 from AMO_2 import settings
+from collect_macmenu.services.selenium_service.utils import clear_string
 from .macmenu_parse_config import options_configuration
-from selenium import webdriver
-import json
 
 
 class SingletonMeta(type):
@@ -25,81 +31,100 @@ class SingletonMeta(type):
 class MacMenu(metaclass=SingletonMeta):
 
     def __init__(self):
-        self._browser = webdriver.Chrome(options=options_configuration())
-        self._browser.implicitly_wait(10)
-        self._wait = WebDriverWait(self._browser, timeout=15)
+        self._main_url = "https://www.mcdonalds.com/ua/uk-ua/eat/fullmenu.html"
 
-    def _collect_product_info(self, product_url: str) -> dict:
+    @staticmethod
+    def open_accordion(product_url) -> BeautifulSoup:
+        """opens accordion on the product page and returns bs object"""
+
+        for i in range(10):
+            try:
+                driver = webdriver.Chrome(options=options_configuration())
+                driver.get(product_url)
+                accordion = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "div.cmp-accordion__item"))
+                )
+                accordion_id = accordion.get_attribute("id")
+                break
+            except Exception as e:
+                print(f"Exception while waiting for accordion: {e}\n{product_url}")
+                driver.close()
+                continue
+
+        driver.get(f"{product_url}#{accordion_id}")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "div.cmp-nutrition-summary__details-column-view-desktop > ul"))
+        )
+        bs = BeautifulSoup(driver.page_source, "html.parser")
+        return bs
+
+    @staticmethod
+    def _collect_product_info(product_url: str) -> dict:
         """returns dict with a full product info"""
 
-        # open product page in new tab
-        self._browser.execute_script("window.open(arguments[0], '_blank');", product_url)
-        self._browser.switch_to.window(self._browser.window_handles[1])
+        for i in range(10):
+            try:
+                bs = MacMenu.open_accordion(product_url)
+                images_base_url = "https://s7d1.scene7.com/is/image/"
 
-        name = self._browser.find_element(By.CSS_SELECTOR,
-                                          "span.cmp-product-details-main__heading-title").get_attribute("textContent")
-        description = self._browser.find_element(
-            By.CSS_SELECTOR,
-            "div.cmp-product-details-main__description").get_attribute("textContent") \
-            .replace("\n", "").replace("\t", "")
+                name = bs.select_one("span.cmp-product-details-main__heading-title").text
+                description = clear_string(bs.select_one("div.cmp-product-details-main__description").text)
 
-        try:
-            self._wait.until(EC.text_to_be_present_in_element_attribute(
-                (By.CSS_SELECTOR, "div.cq-dd-image img"), "src", "https"))
-            img_url = self._browser.find_element(By.CSS_SELECTOR, "div.cq-dd-image img").get_attribute("src")
-        except TimeoutException:
-            img_url = "https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg"
-        # open accordion element
-        energy_value_accordion = self._browser.find_element(
-            By.XPATH,
-            "//div[@class='accordion panelcontainer cmp-accordion--default cmp-accordion--nutrition-information']"
-            "/div/div[1]/h2/button"
-        )
-        energy_value_accordion.click()
-        self._wait.until(lambda d: energy_value_accordion.get_attribute("aria-expanded") == 'true')
+                image_rel_path = bs.select_one("div.s7dm-dynamic-media").get("data-asset-path")
+                image_url = urljoin(images_base_url, image_rel_path)
 
-        primary_nutrition_pattern = "//ul[@class='cmp-nutrition-summary__heading-primary']/li[{}]/span[1]/span[2]"
-        calories = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(1)).text
-        fats = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(2)).text
-        carbs = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(3)).text
-        proteins = self._browser.find_element(By.XPATH, primary_nutrition_pattern.format(4)).text
+                primary_nutritions = bs.select("li.cmp-nutrition-summary__heading-primary-item")
+                calories, fats, carbohydrates, proteins = [clear_string(nutrition.select("span.value > span")[1].text)
+                                                           for nutrition in primary_nutritions]
 
-        secondary_nutrition_pattern = "//div[@class='cmp-nutrition-summary__details-column-view-desktop']/ul/li[{}]/span[2]/span[1]"
+                secondary_nutritions = bs.select_one("div.cmp-nutrition-summary__details-column-view-desktop > ul")
+                unsaturated_fats, sugar, salt, portion = [
+                    clear_string(nutrition.select_one("span.sr-only").text).split(" ")[0]
+                    for nutrition in secondary_nutritions.select("li")[-4:]
+                ]
+                break
+            except Exception as e:
+                print(e)
+                print(f"product page exception\n{product_url}")
+                continue
 
-        unsaturated_fats = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(1)).text
-        sugar = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(2)).text
-        salt = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(3)).text
-        portion = self._browser.find_element(By.XPATH, secondary_nutrition_pattern.format(4)).text
-
-        self._browser.close()
-        self._browser.switch_to.window(self._browser.window_handles[0])
-
-        product = {
-            'name': name, 'description': description, 'img_url': img_url, 'calories': calories, 'fats': fats,
-            'carbs': carbs, 'proteins': proteins, 'unsaturated_fats': unsaturated_fats, 'sugar': sugar, 'salt': salt,
-            'portion': portion}
-        return product
+        return {
+            "name": name,
+            "image_url": image_url,
+            "description": description,
+            "calories": calories,
+            "fats": fats,
+            "carbohydrates": carbohydrates,
+            "proteins": proteins,
+            "unsaturated_fats": unsaturated_fats,
+            "sugar": sugar,
+            "salt": salt,
+            "portion": portion
+        }
 
     def save_mac_menu_as_json(self) -> bool:
         """parses mcdonalds and dumps products data in .json file
         returns True if succeed"""
+
         try:
             menu_dict = {"products": []}
-            self._browser.get("https://www.mcdonalds.com/ua/uk-ua/eat/fullmenu.html")
-            products = self._browser.find_elements(By.CSS_SELECTOR, "a.cmp-category__item-link")
-            for product in products:
-                try:
-                    product_dict = self._collect_product_info(product.get_attribute("href"))
-                except StaleElementReferenceException:
-                    product_dict = self._collect_product_info(product.get_attribute("href"))
-                menu_dict["products"].append(product_dict)
-                print(product_dict)
-            with open(os.path.join(settings.BASE_DIR, 'mac_menu.json'), "w") as menu_f:
-                json.dump(menu_dict, menu_f, indent=4)
+            bs = BeautifulSoup(requests.get(self._main_url).text, "html.parser")
+            relative_product_urls = (product.get("href") for product in bs.select("a.cmp-category__item-link"))
+            product_urls = [f"https://www.mcdonalds.com{url}" for url in relative_product_urls]
+            with ThreadPool(32) as pool:
+                products = pool.map(self._collect_product_info, product_urls)
+            menu_dict["products"] = products
+            with open(os.path.join(settings.BASE_DIR, "mac_menu.json"), "w") as f:
+                json.dump(menu_dict, f, indent=4)
             return True
         except Exception as e:
             print(e)
             return False
-        finally:
-            self._browser.close()
-            self._browser.quit()
+
+
+if __name__ == "__main__":
+    start = time.time()
+    menu = MacMenu()
+    menu.save_mac_menu_as_json()
+    print(time.time() - start)
